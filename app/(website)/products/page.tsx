@@ -1,3 +1,4 @@
+// app/products/page.tsx
 'use client';
 
 import { Search, Upload, Download, Plus, Grid3X3, List } from "lucide-react";
@@ -7,23 +8,44 @@ export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const currentPage = parseInt(searchParams.get("page") || "1");
+  const currentPage = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
   const itemsPerPage = 10;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const totalPages = Math.ceil(products.length / itemsPerPage);
-  const safePage = Math.max(1, Math.min(currentPage, totalPages));
-  const displayedProducts = products.slice(startIndex, endIndex);
+  const totalItems = products.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  const goToPage = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return;
+  const displayedProducts = products.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return;
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", newPage.toString());
+    params.set("page", page.toString());
     router.push(`?${params.toString()}`);
   };
 
+  // สร้างเลขหน้าที่จะแสดง (แสดง 5 หน้า + ... ถ้ามี)
+  const getPageNumbers = (): (number | "ellipsis")[] => {
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, 5, "ellipsis", totalPages];
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return [1, "ellipsis", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [1, "ellipsis", currentPage - 1, currentPage, currentPage + 1, "ellipsis", totalPages];
+  };
+
   return (
-    <div className="p-2"> {/* ลดจาก p-4 → p-2 */}
+    <div className="p-2">
       {/* Breadcrumb + Title */}
       <div className="mb-2">
         <div className="text-[10px] text-gray-500">Home › Products</div>
@@ -44,7 +66,7 @@ export default function ProductsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
-        {/* Left Sidebar - Categories & Filters */}
+        {/* Left Sidebar */}
         <div className="lg:col-span-1 space-y-2">
           <div className="bg-white rounded border border-gray-200 p-2">
             <h3 className="font-semibold text-gray-900 text-md mb-1">Categories</h3>
@@ -53,9 +75,7 @@ export default function ProductsPage() {
                 <li key={cat.name}>
                   <button
                     className={`w-full text-left px-2 py-1 rounded text-xs font-medium ${
-                      cat.active
-                        ? "bg-orange-500 text-white"
-                        : "hover:bg-gray-50 text-gray-700"
+                      cat.active ? "bg-orange-500 text-white" : "hover:bg-gray-50 text-gray-700"
                     }`}
                   >
                     {cat.name} <span className="float-right">({cat.count})</span>
@@ -84,16 +104,8 @@ export default function ProductsPage() {
               <div className="pt-1">
                 <p className="text-[10px] font-medium text-gray-900 mb-1">Price Range</p>
                 <div className="grid grid-cols-2 gap-1">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    className="h-6 px-2 text-[10px] bg-gray-50 border border-gray-300 rounded"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    className="h-6 px-2 text-[10px] bg-gray-50 border border-gray-300 rounded"
-                  />
+                  <input type="number" placeholder="Min" className="h-6 px-2 text-[10px] bg-gray-50 border border-gray-300 rounded" />
+                  <input type="number" placeholder="Max" className="h-6 px-2 text-[10px] bg-gray-50 border border-gray-300 rounded" />
                 </div>
               </div>
 
@@ -132,7 +144,7 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Product Grid - 5 columns, very compact */}
+          {/* Product Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1">
             {displayedProducts.map((product) => (
               <div
@@ -165,40 +177,62 @@ export default function ProductsPage() {
             ))}
           </div>
 
-          {/* Pagination - ซ่อนหรือย่อขนาด */}
+          {/* Pagination - แก้ key แล้ว + แสดงแค่ 3-5 หน้า */}
           <div className="mt-2 flex flex-wrap justify-between items-center gap-2 text-[10px] text-gray-600">
-            <div>1–10 of {products.length}</div>
+            <div>
+              Showing {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+            </div>
+
             <div className="flex items-center gap-1">
+              {/* Prev */}
               <button
-                onClick={() => goToPage(safePage - 1)}
-                disabled={safePage <= 1}
-                className={`h-6 px-2 border border-gray-300 rounded text-[10px] ${
-                  safePage <= 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+                className={`h-6 px-2 border rounded text-[10px] ${
+                  currentPage <= 1
+                    ? "opacity-50 cursor-not-allowed border-gray-300"
+                    : "border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 Prev
               </button>
+
+              {/* Page Numbers */}
+              {getPageNumbers().map((page, index) => {
+                if (page === "ellipsis") {
+                  return (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="w-6 h-6 flex items-center justify-center text-[10px] select-none"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+
+                return (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-medium transition-all ${
+                      currentPage === page
+                        ? "bg-orange-500 text-white"
+                        : "border border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+
+              {/* Next */}
               <button
-                className={`w-6 h-6 rounded text-[10px] flex items-center justify-center ${
-                  safePage === 1 ? "bg-orange-500 text-white" : "border border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                1
-              </button>
-              {totalPages > 1 && (
-                <button
-                  className={`w-6 h-6 rounded text-[10px] flex items-center justify-center ${
-                    safePage === 2 ? "bg-orange-500 text-white" : "border border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  2
-                </button>
-              )}
-              <button
-                onClick={() => goToPage(safePage + 1)}
-                disabled={safePage >= totalPages}
-                className={`h-6 px-2 border border-gray-300 rounded text-[10px] ${
-                  safePage >= totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+                className={`h-6 px-2 border rounded text-[10px] ${
+                  currentPage >= totalPages
+                    ? "opacity-50 cursor-not-allowed border-gray-300"
+                    : "border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 Next
