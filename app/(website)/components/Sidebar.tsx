@@ -11,7 +11,7 @@ import { usePathname } from "next/navigation";
 import { useSidebar } from "../hooks/use-sidebar";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Users, label: "Customers", href: "/customers" },
   { icon: ShoppingCart, label: "Orders", href: "/orders" },
   { icon: Package, label: "Products", href: "/products" },

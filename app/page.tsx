@@ -1,145 +1,123 @@
 // app/page.tsx
-import { Download, Plus, ChevronRight, AlertTriangle } from "lucide-react";
+import { Lock, Mail, LogIn, Shield, User, KeyRound } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="p-8 w-full mx-auto">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50 px-4 py-12">
+      <div className="w-full max-w-md">
+        {/* Premium Card */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 
+                        transition-all duration-500 hover:shadow-3xl hover:-translate-y-1">
+          
+          {/* Gradient Header */}
+          <div className="relative bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 px-8 py-12 text-center overflow-hidden">
+            <div className="absolute inset-0 bg-white/10"></div>
+            <div className="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-16 -translate-y-16"></div>
+            <div className="absolute bottom-0 right-0 w-48 h-48 bg-white/10 rounded-full translate-x-20 translate-y-20"></div>
 
-      {/* Header */}
-      <div className="mb-5">
-        <div className="text-sm text-gray-500 mb-1">Home › Dashboard</div>
-        <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-      </div>
-
-      {/* Top Actions */}
-      <div className="flex justify-end gap-3 mb-5">
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
-          <Download className="w-4 h-4" /> Export Data
-        </button>
-        <button className="flex items-center gap-2 px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium shadow-sm transition">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Refresh
-        </button>
-      </div>
-
-      {/* Key Metrics - 4 การ์ด กะทัดรัด สวยงาม */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-        <MetricCard title="Total Revenue" value="$1,245,678" change="+12.5%" />
-        <MetricCard title="Active Customers" value="1,847" change="+23 this week" />
-        <MetricCard title="Pending Orders" value="127" change="15 need action" />
-        <MetricCard title="Low Stock" value="34" change="Reorder now" />
-      </div>
-
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-        {/* Recent Orders - ขนาดเท่ากับหน้า Orders */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="font-semibold text-gray-900">Recent Orders</h3>
-            <a href="/orders" className="text-sm text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1">
-              View All <ChevronRight className="w-4 h-4" />
-            </a>
+            <div className="relative z-10">
+              <div className="w-24 h-24 mx-auto mb-6 bg-white/25 backdrop-blur-md rounded-3xl flex items-center justify-center shadow-2xl border border-white/40 
+                              ring-4 ring-white/20">
+                <Lock className="w-12 h-12 text-white" strokeWidth={2.5} />
+              </div>
+              <h1 className="text-4xl font-black text-white tracking-tight drop-shadow-lg">
+                Amsel Admin
+              </h1>
+              <p className="mt-3 text-white/95 text-lg font-medium">
+                เข้าสู่ระบบเพื่อจัดการหลังบ้าน
+              </p>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <tr>
-                  <th className="px-4 py-2.5 text-left">Order ID</th>
-                  <th className="px-4 py-2.5 text-left">Customer</th>
-                  <th className="px-4 py-2.5 text-left">Date</th>
-                  <th className="px-4 py-2.5 text-left">Total</th>
-                  <th className="px-4 py-2.5 text-left">Status</th>
-                  <th className="px-4 py-2.5 text-left"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 text-xs">
-                {recentOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-orange-50/30 h-12">
-                    <td className="px-4 py-3 font-medium text-orange-600">#{order.id}</td>
-                    <td className="px-4 py-3 text-gray-700">{order.customer}</td>
-                    <td className="px-4 py-3 text-gray-600">{order.date}</td>
-                    <td className="px-4 py-3 font-semibold text-orange-600">${order.total}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${order.status === "Processing" ? "bg-orange-100 text-orange-800" : order.status === "Shipped" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button className="text-orange-600 hover:underline text-xs font-medium">View</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+          {/* Form Body */}
+          <div className="px-8 pt-8 pb-10 space-y-7">
+            <form className="space-y-6">
+              {/* Username Field */}
+              <div className="group">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 pl-1">
+                  ชื่อผู้ใช้หรืออีเมล
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Mail className="w-5 h-5 text-orange-500 group-focus-within:text-orange-600 transition-colors" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="กรอกชื่อผู้ใช้หรืออีเมล"
+                    className="w-full pl-12 pr-5 py-4 bg-gray-50/70 border border-gray-300 rounded-2xl 
+                               text-gray-900 placeholder-gray-500 text-base
+                               focus:outline-none focus:ring-4 focus:ring-orange-500/30 focus:border-orange-500 
+                               hover:border-orange-400 hover:bg-gray-50 transition-all duration-300 
+                               shadow-sm focus:shadow-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="group">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 pl-1">
+                  รหัสผ่าน
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <KeyRound className="w-5 h-5 text-orange-500 group-focus-within:text-orange-600 transition-colors" />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    placeholder="กรอกรหัสผ่านของคุณ"
+                    className="w-full pl-12 pr-5 py-4 bg-gray-50/70 border border-gray-300 rounded-2xl 
+                               text-gray-900 placeholder-gray-500 text-base
+                               focus:outline-none focus:ring-4 focus:ring-orange-500/30 focus:border-orange-500 
+                               hover:border-orange-400 hover:bg-gray-50 transition-all duration-300 
+                               shadow-sm focus:shadow-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Login Button */}
+              <button
+                type="submit"
+                className="w-full group relative overflow-hidden py-4 px-6 bg-gradient-to-r from-orange-500 to-amber-600 
+                           hover:from-orange-600 hover:to-amber-700 text-white font-bold text-lg rounded-2xl 
+                           shadow-lg hover:shadow-2xl transform hover:-translate-y-1 
+                           transition-all duration-300 flex items-center justify-center gap-3"
+              >
+                <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                <span className="relative">เข้าสู่ระบบ</span>
+              </button>
+            </form>
+
+            {/* Footer Links */}
+            <div className="text-center space-y-5 pt-6 border-t border-gray-100">
+              <a
+                href="#"
+                className="inline-block text-orange-600 hover:text-orange-700 font-medium 
+                           underline underline-offset-4 hover:underline-offset-2 transition-all duration-300"
+              >
+                ลืมรหัสผ่าน?
+              </a>
+
+              <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                <Shield className="w-4 h-4 text-green-500" />
+                <span>การเชื่อมต่อของคุณปลอดภัยด้วยการเข้ารหัส SSL</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Quick Actions - กะทัดรัด เรียบ */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <h3 className="font-semibold text-gray-900 mb-4 text-sm">Quick Actions</h3>
-          <div className="space-y-2">
-            <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-medium text-sm shadow-sm transition flex items-center justify-center gap-2">
-              <Plus className="w-4 h-4" /> New Order
-            </button>
-            <button className="w-full border border-orange-300 text-orange-700 bg-orange-50 hover:bg-orange-100 py-2.5 rounded-lg text-sm font-medium transition">
-              Add Customer
-            </button>
-            <button className="w-full border border-orange-300 text-orange-700 bg-orange-50 hover:bg-orange-100 py-2.5 rounded-lg text-sm font-medium transition">
-              Add Product
-            </button>
-            <button className="w-full border border-orange-300 text-orange-700 bg-orange-50 hover:bg-orange-100 py-2.5 rounded-lg text-sm font-medium transition">
-              Update Stock
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="mt-10 text-center">
+          <p className="text-sm font-medium text-gray-600">
+            © {new Date().getFullYear()} Amsel Admin. All rights reserved.
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Secured • Modern • Professional
+          </p>
         </div>
-      </div>
-
-      {/* Alerts - กะทัดรัด เรียบ */}
-      <div className="mt-5 bg-orange-50 border border-orange-200 rounded-xl p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <AlertTriangle className="w-5 h-5 text-orange-600" />
-          <h3 className="font-semibold text-orange-900 text-sm">Alerts</h3>
-        </div>
-        <ul className="space-y-2 text-xs text-orange-800 font-medium">
-          <li className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-orange-600 rounded-full"></span>
-            15 orders require approval
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-orange-600 rounded-full"></span>
-            34 products low in stock
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-orange-600 rounded-full"></span>
-            3 payments overdue
-          </li>
-        </ul>
       </div>
     </div>
   );
 }
-
-// Metric Card - ขนาดเล็ก เรียบ สวย
-function MetricCard({ title, value, change }: { title: string; value: string; change: string }) {
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 rounded-xl hover:shadow-md transition">
-      <p className="text-xs font-medium text-gray-600 uppercase">{title}</p>
-      <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
-      <p className="text-xs text-orange-600 font-medium mt-2 flex items-center gap-1">
-        Up {change}
-      </p>
-    </div>
-  );
-}
-
-// ข้อมูลตัวอย่าง Recent Orders
-const recentOrders = [
-  { id: "ORD-2024-1234", customer: "ABC Pharmacy Ltd", date: "2025-12-03", total: "12,450", status: "Processing" },
-  { id: "ORD-2024-1233", customer: "XYZ Healthcare", date: "2025-12-02", total: "8,234", status: "Shipped" },
-  { id: "ORD-2024-1232", customer: "MediCare Solutions", date: "2025-12-02", total: "4,567", status: "Pending" },
-  { id: "ORD-2024-1231", customer: "HealthPlus Clinic", date: "2025-12-01", total: "18,900", status: "Delivered" },
-  { id: "ORD-2024-1230", customer: "Wellness Center", date: "2025-12-01", total: "3,200", status: "Delivered" },
-];
