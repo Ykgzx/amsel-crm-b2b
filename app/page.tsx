@@ -1,7 +1,50 @@
 // app/page.tsx
+'use client';
+
 import { Lock, Mail, LogIn, Shield, User, KeyRound } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // ถ้า login สำเร็จ → เก็บข้อมูล admin ใน localStorage (หรือ cookie)
+      localStorage.setItem("admin", JSON.stringify(data.admin));
+      
+      // แล้ว redirect ไปยัง dashboard หรือหน้าหลัก
+      router.push("/dashboard"); // หรือหน้าที่คุณต้องการ
+
+    } catch (err: any) {
+      setError(err.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50 px-4 py-12">
       <div className="w-full max-w-md">
@@ -31,7 +74,7 @@ export default function Home() {
 
           {/* Form Body */}
           <div className="px-8 pt-8 pb-10 space-y-7">
-            <form className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Username Field */}
               <div className="group">
                 <label className="block text-sm font-semibold text-gray-700 mb-2 pl-1">
@@ -44,6 +87,8 @@ export default function Home() {
                   <input
                     type="text"
                     required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     placeholder="กรอกชื่อผู้ใช้หรืออีเมล"
                     className="w-full pl-12 pr-5 py-4 bg-gray-50/70 border border-gray-300 rounded-2xl 
                                text-gray-900 placeholder-gray-500 text-base
@@ -66,6 +111,8 @@ export default function Home() {
                   <input
                     type="password"
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="กรอกรหัสผ่านของคุณ"
                     className="w-full pl-12 pr-5 py-4 bg-gray-50/70 border border-gray-300 rounded-2xl 
                                text-gray-900 placeholder-gray-500 text-base
@@ -79,15 +126,23 @@ export default function Home() {
               {/* Login Button */}
               <button
                 type="submit"
-                className="w-full group relative overflow-hidden py-4 px-6 bg-gradient-to-r from-orange-500 to-amber-600 
-                           hover:from-orange-600 hover:to-amber-700 text-white font-bold text-lg rounded-2xl 
+                disabled={loading}
+                className={`w-full group relative overflow-hidden py-4 px-6 bg-gradient-to-r from-orange-500 to-amber-600 
+                           ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:from-orange-600 hover:to-amber-700'} text-white font-bold text-lg rounded-2xl 
                            shadow-lg hover:shadow-2xl transform hover:-translate-y-1 
-                           transition-all duration-300 flex items-center justify-center gap-3"
+                           transition-all duration-300 flex items-center justify-center gap-3`}
               >
                 <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-                <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                <span className="relative">เข้าสู่ระบบ</span>
+                <LogIn className={`w-5 h-5 group-hover:translate-x-1 transition-transform duration-200 ${loading ? 'animate-spin' : ''}`} />
+                <span className="relative">{loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}</span>
               </button>
+
+              {/* Error Message */}
+              {error && (
+                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200 mt-4">
+                  {error}
+                </div>
+              )}
             </form>
 
             {/* Footer Links */}
