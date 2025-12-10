@@ -20,6 +20,7 @@ model User {
   shopName           String?
   phoneNumber        String   @unique
   email              String?  @unique
+  password           String 
   role               String   @default("USER")   // USER, ADMIN, SUPER_ADMIN
   points             Int      @default(0)
   tier               String   @default("BRONZE") // BRONZE, SILVER, GOLD, PLATINUM
@@ -42,6 +43,22 @@ model User {
 
   @@index([role])
   @@index([tier])
+}
+
+// Admin model for back-office users
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      String   @default("ADMIN") // ADMIN, SUPER_ADMIN
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
 }
 
 model Product {

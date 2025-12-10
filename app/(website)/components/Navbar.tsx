@@ -40,11 +40,11 @@ export default function Navbar() {
         <div className="flex items-center gap-5">
           <div className="hidden md:flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-bold text-white">{user.username}</p>
-              <p className="text-xs text-white/80">{user.role}</p>
+              <p className="text-sm font-bold text-white">{user.name || user.email}</p>
+              <p className="text-xs text-white/80">{user.role || 'USER'}</p>
             </div>
             <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-amber-400 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-xl border-2 border-white/30">
-              {user.username.charAt(0).toUpperCase()}
+              {(user.name || user.email).charAt(0).toUpperCase()}
             </div>
           </div>
 

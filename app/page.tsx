@@ -4,9 +4,10 @@
 import { Lock, Mail, LogIn, Shield, User, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function Home() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,26 +19,19 @@ export default function Home() {
     setError(null);
 
     try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Login failed");
+      if (result?.error) {
+        throw new Error(result.error);
       }
 
-      // ถ้า login สำเร็จ → เก็บข้อมูล admin ใน localStorage (หรือ cookie)
-      localStorage.setItem("admin", JSON.stringify(data.admin));
-      
-      // แล้ว redirect ไปยัง dashboard หรือหน้าหลัก
-      router.push("/dashboard"); // หรือหน้าที่คุณต้องการ
-
+      if (result?.ok) {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       setError(err.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
     } finally {
@@ -75,21 +69,21 @@ export default function Home() {
           {/* Form Body */}
           <div className="px-8 pt-8 pb-10 space-y-7">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Username Field */}
+              {/* Email Field */}
               <div className="group">
                 <label className="block text-sm font-semibold text-gray-700 mb-2 pl-1">
-                  ชื่อผู้ใช้หรืออีเมล
+                  อีเมล
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Mail className="w-5 h-5 text-orange-500 group-focus-within:text-orange-600 transition-colors" />
                   </div>
                   <input
-                    type="text"
+                    type="email"
                     required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="กรอกชื่อผู้ใช้หรืออีเมล"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="กรอกอีเมลของคุณ"
                     className="w-full pl-12 pr-5 py-4 bg-gray-50/70 border border-gray-300 rounded-2xl 
                                text-gray-900 placeholder-gray-500 text-base
                                focus:outline-none focus:ring-4 focus:ring-orange-500/30 focus:border-orange-500 
