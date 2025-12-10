@@ -1,40 +1,35 @@
 // app/hooks/use-auth.ts
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+'use client';
 
-export interface AdminUser {
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
+export interface AuthUser {
   id: string;
-  username: string;
+  email: string;
+  name: string;
   role: string;
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    const stored = localStorage.getItem("admin");
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch (e) {
-        console.warn("Invalid admin data in localStorage");
-      }
+    if (status === 'unauthenticated') {
+      router.push('/login');
     }
-    setLoading(false);
-  }, []);
+  }, [status, router]);
 
   const logout = async () => {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch (err) {
-      console.warn("Logout API failed (safe to ignore)");
-    }
-    localStorage.removeItem("admin");
-    setUser(null);
-    router.push("/");
+    await signOut({ callbackUrl: '/' });
   };
 
-  return { user, loading, logout };
+  return {
+    user: (session?.user as AuthUser) || null,
+    loading: status === 'loading',
+    authenticated: status === 'authenticated',
+    logout,
+  };
 }
