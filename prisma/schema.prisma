@@ -1,15 +1,193 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
 }
 
-model Admin {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  username  String   @unique
-  password  String
-  role      String   @default("admin")
+// -------------------------------------------------------------------------
+// Enums → เปลี่ยนเป็น String + CHECK constraint ใน SQL
+// -------------------------------------------------------------------------
+model User {
+  id                 Int      @id @default(autoincrement())
+  lineUserId         String   @unique
+  firstName          String
+  lastName           String
+  shopName           String?
+  phoneNumber        String   @unique
+  email              String?  @unique
+  role               String   @default("USER")   // USER, ADMIN, SUPER_ADMIN
+  points             Int      @default(0)
+  tier               String   @default("BRONZE") // BRONZE, SILVER, GOLD, PLATINUM
+  credit             Decimal  @default(0) @db.Decimal(10, 2)
+  totalCreditLimit   Decimal? @db.Decimal(12, 2)
+  usedCredit         Decimal? @db.Decimal(12, 2)
+  totalSpending      Decimal? @db.Decimal(12, 2)
+  nextTier           String?  // BRONZE, SILVER, GOLD, PLATINUM
+  toNextTier         Decimal? @db.Decimal(12, 2)
+  CustId             Int?     @unique
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  walletLogs         WalletLog[]
+  carts              Cart[]
+  orders             Order[]
+  redemptions        Redemption[]
+  chatMessages       ChatMessage[]
+  notifications      Notification[]
+
+  @@index([role])
+  @@index([tier])
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String?
+  price         Decimal  @db.Decimal(10, 2)
+  imageUrl      String?
+  price_bronze  Decimal  @db.Decimal(10, 2)
+  price_silver  Decimal  @db.Decimal(10, 2)
+  price_gold    Decimal  @db.Decimal(10, 2)
+  price_platinum Decimal @db.Decimal(10, 2)
+  stock         Int      @default(0)
+  sells         Int      @default(0)
+  isActive      Boolean  @default(true)
+
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  status    String   @default("ACTIVE")   // ACTIVE, CHECKED_OUT
+  items     CartItem[]
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  addedAt   DateTime @default(now())
+
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id])
+  orderNo        String   @unique
+  totalAmount    Decimal  @db.Decimal(12, 2)
+  discount       Decimal  @default(0) @db.Decimal(12, 2)
+  finalAmount    Decimal  @db.Decimal(12, 2)
+  status         String   @default("PENDING") // PENDING, PAID, SHIPPED, COMPLETED, CANCELLED
+  shippingAddress String?
+  trackingNumber String?
+  purchaseDate   DateTime @default(now())
+  items          OrderItem[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+}
+
+model Reward {
+  id          Int         @id @default(autoincrement())
+  name        String
+  points      Int
+  icon        String?
+  redemptions Redemption[]
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Redemption {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  rewardId   Int
+  reward     Reward   @relation(fields: [rewardId], references: [id])
+  pointsSpent Int     @default(0)
+  status     String   @default("PENDING")
+  redeemedAt DateTime @default(now())
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  response  String?
+  isBot     Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // ORDER_UPDATE, PROMOTION, REWARD, SYSTEM
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  adminOnly Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model WalletLog {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id])
+  type          String   // CREDIT_ADD, CREDIT_USE, POINT_ADD, POINT_USE, SYSTEM_ADJUST
+  amount        Decimal  @db.Decimal(12, 2)
+  beforeCredit  Decimal? @db.Decimal(12, 2)
+  afterCredit   Decimal? @db.Decimal(12, 2)
+  beforePoints  Int?
+  afterPoints   Int?
+  description   String?
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  actorId   Int?
+  actorRole String?   // USER, ADMIN, SUPER_ADMIN
+  action    String
+  tableName String
+  recordId  String?
+  oldValues String?   // ใช้ NVARCHAR(MAX) แทน Json
+  newValues String?   // ใช้ NVARCHAR(MAX) แทน Json
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
+  @@index([action])
 }
