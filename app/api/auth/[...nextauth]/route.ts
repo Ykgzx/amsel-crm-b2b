@@ -28,8 +28,10 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+
+        // ❗ validate ภาษาไทย
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required');
+          throw new Error('กรุณากรอกอีเมลและรหัสผ่าน');
         }
 
         try {
@@ -37,12 +39,14 @@ export const authOptions: NextAuthOptions = {
             where: { email: credentials.email },
           });
 
+          // ❗ ไม่เจออีเมล
           if (!admin) {
-            throw new Error('Invalid credentials');
+            throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
           }
 
+          // ❗ บัญชีโดนปิดใช้งาน
           if (!admin.isActive) {
-            throw new Error('Account is disabled');
+            throw new Error('บัญชีนี้ถูกระงับการใช้งาน');
           }
 
           const isPasswordValid = await bcrypt.compare(
@@ -50,8 +54,9 @@ export const authOptions: NextAuthOptions = {
             admin.password
           );
 
+          // ❗ รหัสผ่านผิด
           if (!isPasswordValid) {
-            throw new Error('Invalid credentials');
+            throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
           }
 
           return {
@@ -61,6 +66,7 @@ export const authOptions: NextAuthOptions = {
             image: null,
             role: admin.role,
           };
+
         } catch (error) {
           console.error('Auth error:', error);
           throw error;
@@ -85,12 +91,12 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/login',
-    error: '/login',
+    signIn: '/',
+    error: '/', // ส่ง error message ผ่าน query ?error=
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
