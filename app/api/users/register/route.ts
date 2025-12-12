@@ -7,8 +7,9 @@ import { z } from "zod";
 // Validate 
 // -------------------------------
 const registerSchema = z.object({
-  fullName: z.string().min(1, "กรุณาระบุชื่อ-นามสกุล").optional(),
-  company: z.string().min(1, "กรุณาระบุบริษัท"),
+  firstName: z.string().min(1, "กรุณาระบุชื่อ"),
+  lastName: z.string().min(1, "กรุณาระบุนามสกุล"),
+  company: z.string().min(1, "กรุณาระบุบริษัท").optional(),
   phoneNumber: z
     .string()
     .regex(/^0[6-9]\d{8}$/, "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง (เช่น 0812345678)"),
@@ -25,7 +26,8 @@ export async function GET() {
       select: {
         id: true,
         lineUserId: true,
-        fullName: true,
+        firstName: true,
+        lastName: true,
         company: true,
         phoneNumber: true,
         email: true,
@@ -67,7 +69,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    const { fullName, company, phoneNumber, email } = parsed.data;
+    const { firstName, lastName, company, phoneNumber, email } = parsed.data;
 
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -104,16 +106,18 @@ export async function POST(req: NextRequest) {
     const newUser = await prisma.user.create({
       data: {
         lineUserId,
-        fullName: fullName ?? "",
+        firstName,
+        lastName,
         company,
         phoneNumber,
-        email , 
+        email, 
         registerCode: "AMSEL", 
       },
       select: {
         id: true,
         lineUserId: true,
-        fullName: true,
+        firstName: true,
+        lastName: true,
         company: true,
         phoneNumber: true,
         email: true,
