@@ -1,9 +1,12 @@
+
 // app/api/users/check/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+
     // ------------------------------
     // 1) อ่าน LINE Access Token จาก Header
     // ------------------------------
@@ -12,9 +15,11 @@ export async function GET(request: NextRequest) {
     if (!authHeader) {
       return NextResponse.json(
         { error: "กรุณาส่ง Authorization header: Bearer <accessToken>" },
+
         { status: 400 }
       );
     }
+
 
     const accessToken = authHeader.replace("Bearer ", "").trim();
 
@@ -47,6 +52,7 @@ export async function GET(request: NextRequest) {
     // ------------------------------
     // 3) เช็คผู้ใช้ใน Database
     // ------------------------------
+
     const user = await prisma.user.findUnique({
       where: { lineUserId },
       select: {
@@ -60,12 +66,14 @@ export async function GET(request: NextRequest) {
         registerCode: true,
         createdAt: true,
         updatedAt: true,
+
       },
     });
 
     if (user) {
       return NextResponse.json({
         exists: true,
+
         user,
       });
     }
@@ -87,9 +95,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: "เกิดข้อผิดพลาดในการตรวจสอบผู้ใช้",
+
         ...(isDev ? { details: error.message } : {}),
       },
       { status: 500 }
     );
   }
+
 }
+
