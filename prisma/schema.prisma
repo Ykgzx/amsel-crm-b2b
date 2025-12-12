@@ -13,18 +13,22 @@ datasource db {
 // USER MODEL
 // -------------------------------------------------------------------------
 model User {
-  id           Int       @id @default(autoincrement())
-  lineUserId   String    @unique
-  fullName     String
-  shopName     String?
-  phoneNumber  String    @unique
-  email        String    @unique
-  tier         String    @default("BRONZE")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            Int           @id @default(autoincrement())
+  lineUserId    String        @unique
+  fullName      String
+  company       String?
+  phoneNumber   String        @unique
+  email         String        @unique
+  tier          String        @default("BRONZE")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  registerCode  String
+
+  status        String        @default("PENDING")
+
   // Relations
-  roles        UserRole[]
-  companies    UserCompany[]
+  roles         UserRole[]
+  companies     UserCompany[]
 }
 
 // -------------------------------------------------------------------------
@@ -34,6 +38,7 @@ model Role {
   id    Int     @id @default(autoincrement())
   name  String  @unique
   userRoles UserRole[]
+  rbacs Rbac[]
 }
 
 // -------------------------------------------------------------------------
