@@ -161,6 +161,12 @@ export default function Home() {
 
               {/* ลบ error box เดิมออก เพราะใช้ SweetAlert แทน */}
             </form>
+            <div className="flex justify-center items-center gap-2 text-black">
+              <h1>ไม่มีบัญชี?</h1>
+              <a href="/register" className="border-b border-orange-600">
+                  <h1 className="text-orange-600">สมัครบัญชี</h1>
+              </a>
+            </div>
           </div>
         </div>
 

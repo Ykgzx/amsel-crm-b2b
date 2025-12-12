@@ -436,7 +436,7 @@ export default function UsersPage() {
                          user.status === 'INACTIVE' ? 'Inactive' : user.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-sm space-x-2">
+                    <td className="px-4 py-3 text-center text-sm space-x-2 flex justify-center">
                       <button
                         onClick={() => handleApproveClick(user)}
                         className="flex items-center gap-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs"
