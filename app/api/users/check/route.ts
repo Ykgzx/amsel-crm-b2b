@@ -1,20 +1,58 @@
-// app/api/users/search/route.ts
+
+// app/api/users/check/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const lineUserId = searchParams.get('lineUserId')?.trim();
 
-    if (!lineUserId) {
+    // ------------------------------
+    // 1) อ่าน LINE Access Token จาก Header
+    // ------------------------------
+    const authHeader = request.headers.get("authorization");
+
+    if (!authHeader) {
       return NextResponse.json(
-        { error: 'กรุณาระบุ lineUserId' },
+        { error: "กรุณาส่ง Authorization header: Bearer <accessToken>" },
+
         { status: 400 }
       );
     }
 
-    // ค้นหาผู้ใช้
+
+    const accessToken = authHeader.replace("Bearer ", "").trim();
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "Access Token ไม่มีหรือรูปแบบไม่ถูกต้อง" },
+        { status: 400 }
+      );
+    }
+
+    // ------------------------------
+    // 2) ใช้ Access Token ดึงข้อมูลจาก LINE API
+    // ------------------------------
+    const profileResponse = await fetch("https://api.line.me/v2/profile", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!profileResponse.ok) {
+      return NextResponse.json(
+        { error: "Access Token ไม่ถูกต้องหรือนหมดอายุ" },
+        { status: 401 }
+      );
+    }
+
+    const profile = await profileResponse.json();
+    const lineUserId = profile.userId; // ได้จาก LINE API
+
+    // ------------------------------
+    // 3) เช็คผู้ใช้ใน Database
+    // ------------------------------
+
     const user = await prisma.user.findUnique({
       where: { lineUserId },
       select: {
@@ -28,34 +66,41 @@ export async function GET(request: NextRequest) {
         registerCode: true,
         createdAt: true,
         updatedAt: true,
-        // ถ้าต้องการเพิ่มข้อมูลอื่น เช่น roles หรือ companies
-        // roles: { select: { role: { select: { name: true } } } },
+
       },
     });
 
     if (user) {
       return NextResponse.json({
         exists: true,
+
+        user,
       });
     }
 
-    // ไม่พบผู้ใช้ → ส่งข้อมูลที่จำเป็นสำหรับการสมัคร
+    // ------------------------------
+    // 4) ยังไม่เคยสมัคร → ส่งข้อมูลกลับไปให้สมัคร
+    // ------------------------------
     return NextResponse.json({
       exists: false,
-      message: 'ไม่พบผู้ใช้ในระบบ กรุณาสมัครสมาชิก',
-      lineUserId, // ส่งกลับไปให้ frontend ใช้ในหน้า register ได้เลย
-    });
-  } catch (error: any) {
-    console.error('API /users/search ERROR:', error);
+      message: "ไม่พบผู้ใช้ในระบบ กรุณาสมัครสมาชิก",
+      lineUserId,
+    },
+  { status: 401 });
 
-    // ใน production อย่าคืน details ให้ client
-    const isDev = process.env.NODE_ENV === 'development';
+  } catch (error: any) {
+    console.error("API /users/check ERROR:", error);
+
+    const isDev = process.env.NODE_ENV === "development";
     return NextResponse.json(
       {
-        error: 'เกิดข้อผิดพลาดในการตรวจสอบผู้ใช้',
+        error: "เกิดข้อผิดพลาดในการตรวจสอบผู้ใช้",
+
         ...(isDev ? { details: error.message } : {}),
       },
       { status: 500 }
     );
   }
+
 }
+
