@@ -8,12 +8,14 @@ async function createAdmin() {
   const password = await bcrypt.hash('ams4520', 12);
 
   await prisma.admin.upsert({
-    where: { username: 'amsel-admin' },
+    where: { email: 'admin@amsel.com' },
     update: { password }, // อัปเดตรหัสผ่านถ้ามีอยู่แล้ว
     create: {
-      username: 'amsel-admin',
+      email: 'admin@amsel.com',
       password,
-      role: 'admin',
+      firstName: 'Admin',
+      lastName: 'Amsel',
+      role: 'SUPER_ADMIN',
     },
   });
 

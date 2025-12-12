@@ -142,17 +142,14 @@ export default function Home() {
             {/* Footer Links */}
             <div className="text-center space-y-5 pt-6 border-t border-gray-100">
               <a
-                href="#"
+                href="/register"
                 className="inline-block text-orange-600 hover:text-orange-700 font-medium 
                            underline underline-offset-4 hover:underline-offset-2 transition-all duration-300"
               >
-                ลืมรหัสผ่าน?
+                สมัครบัญชี
               </a>
 
-              <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                <Shield className="w-4 h-4 text-green-500" />
-                <span>การเชื่อมต่อของคุณปลอดภัยด้วยการเข้ารหัส SSL</span>
-              </div>
+              
             </div>
           </div>
         </div>

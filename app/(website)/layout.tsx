@@ -13,7 +13,7 @@ export default function WebsiteLayout({
     <>
       <Navbar />
       <Sidebar />
-      <main className="lg:ml-64 pt-28">
+      <main className="lg:ml-64 pt-28 bg-white min-h-screen">
         <Providers>{children}</Providers>
  </main>
     </>
