@@ -1,22 +1,24 @@
 // app/page.tsx
 'use client';
 
-import { Lock, Mail, LogIn, Shield, User, KeyRound } from "lucide-react";
+import { Lock, Mail, LogIn, KeyRound, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
+const MySwal = withReactContent(Swal);
 
 export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
       const result = await signIn('credentials', {
@@ -30,10 +32,29 @@ export default function Home() {
       }
 
       if (result?.ok) {
+        // แสดง SweetAlert สำเร็จ (ภาษาไทย)
+        await MySwal.fire({
+          icon: "success",
+          title: "เข้าสู่ระบบสำเร็จ!",
+          text: "กำลังพาคุณไปยังแดชบอร์ด...",
+          timer: 1800,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        });
+
         router.push("/dashboard");
       }
     } catch (err: any) {
-      setError(err.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+      // แสดง SweetAlert ข้อผิดพลาด (ภาษาไทยสวยๆ)
+      MySwal.fire({
+        icon: "error",
+        title: "ไม่สามารถเข้าสู่ระบบได้",
+        text: err.message || "กรุณาตรวจสอบอีเมลและรหัสผ่านอีกครั้ง",
+        confirmButtonText: "ตกลง",
+        confirmButtonColor: "#f97316", // สีส้มให้เข้ากับธีม
+      });
     } finally {
       setLoading(false);
     }
@@ -45,7 +66,7 @@ export default function Home() {
         {/* Premium Card */}
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 
                         transition-all duration-500 hover:shadow-3xl hover:-translate-y-1">
-          
+
           {/* Gradient Header */}
           <div className="relative bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 px-8 py-12 text-center overflow-hidden">
             <div className="absolute inset-0 bg-white/10"></div>
@@ -53,9 +74,9 @@ export default function Home() {
             <div className="absolute bottom-0 right-0 w-48 h-48 bg-white/10 rounded-full translate-x-20 translate-y-20"></div>
 
             <div className="relative z-10">
-              <div className="w-24 h-24 mx-auto mb-6 bg-white/25 backdrop-blur-md rounded-3xl flex items-center justify-center shadow-2xl border border-white/40 
+              <div className="w-15 h-15 mx-auto mb-6 bg-white/25 backdrop-blur-md rounded-3xl flex items-center justify-center shadow-2xl border border-white/40 
                               ring-4 ring-white/20">
-                <Lock className="w-12 h-12 text-white" strokeWidth={2.5} />
+                <Lock className="w-8 h-8 text-white" strokeWidth={2.5} />
               </div>
               <h1 className="text-4xl font-black text-white tracking-tight drop-shadow-lg">
                 Amsel Admin
@@ -93,7 +114,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Password Field */}
+              {/* Password */}
               <div className="group">
                 <label className="block text-sm font-semibold text-gray-700 mb-2 pl-1">
                   รหัสผ่าน
@@ -122,38 +143,25 @@ export default function Home() {
                 type="submit"
                 disabled={loading}
                 className={`w-full group relative overflow-hidden py-4 px-6 bg-gradient-to-r from-orange-500 to-amber-600 
-                           ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:from-orange-600 hover:to-amber-700'} text-white font-bold text-lg rounded-2xl 
-                           shadow-lg hover:shadow-2xl transform hover:-translate-y-1 
-                           transition-all duration-300 flex items-center justify-center gap-3`}
+                  ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:from-orange-600 hover:to-amber-700'} 
+                  text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 
+                  transition-all duration-300 flex items-center justify-center gap-3`}
               >
                 <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-                <LogIn className={`w-5 h-5 group-hover:translate-x-1 transition-transform duration-200 ${loading ? 'animate-spin' : ''}`} />
-                <span className="relative">{loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}</span>
+
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                )}
+
+                <span className="relative">
+                  {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+                </span>
               </button>
 
-              {/* Error Message */}
-              {error && (
-                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200 mt-4">
-                  {error}
-                </div>
-              )}
+              {/* ลบ error box เดิมออก เพราะใช้ SweetAlert แทน */}
             </form>
-
-            {/* Footer Links */}
-            <div className="text-center space-y-5 pt-6 border-t border-gray-100">
-              <a
-                href="#"
-                className="inline-block text-orange-600 hover:text-orange-700 font-medium 
-                           underline underline-offset-4 hover:underline-offset-2 transition-all duration-300"
-              >
-                ลืมรหัสผ่าน?
-              </a>
-
-              <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                <Shield className="w-4 h-4 text-green-500" />
-                <span>การเชื่อมต่อของคุณปลอดภัยด้วยการเข้ารหัส SSL</span>
-              </div>
-            </div>
           </div>
         </div>
 
