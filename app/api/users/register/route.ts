@@ -1,24 +1,52 @@
+// src/app/api/users/route.ts  (หรือ /route.ts ตามโครงสร้างของคุณ)
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 
 // -------------------------------
-// Validate 
+// Validation Schema (รองรับ E.164 เท่านั้น)
 // -------------------------------
 const registerSchema = z.object({
-  firstName: z.string().min(1, "กรุณาระบุชื่อ"),
-  lastName: z.string().min(1, "กรุณาระบุนามสกุล"),
-  company: z.string().min(1, "กรุณาระบุบริษัท").optional(),
+  firstName: z
+    .string()
+    .min(1, "กรุณาระบุชื่อ")
+    .trim()
+    .transform((val) => val.trim()),
+
+  lastName: z
+    .string()
+    .min(1, "กรุณาระบุนามสกุล")
+    .trim()
+    .transform((val) => val.trim()),
+
+  company: z
+    .string()
+    .min(1, "กรุณาระบุบริษัท/ร้านค้า")
+    .optional()
+    .transform((val) => val?.trim()),
+
+  email: z
+    .string()
+    .email("รูปแบบอีเมลไม่ถูกต้อง")
+    .trim()
+    .toLowerCase(),
+
+  // ต้องเป็น +66 ตามด้วย 9 หลัก เริ่มต้นด้วย 6-9 (เบอร์มือถือไทย)
   phoneNumber: z
     .string()
-    .regex(/^0[6-9]\d{8}$/, "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง (เช่น 0812345678)"),
-  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  registerCode: z.literal("AMSEL", { message: "รหัสลงทะเบียนไม่ถูกต้อง" }), //Mock Code ไว้ก่อน "AMSEL"
+    .regex(
+      /^\+66[6-9]\d{8}$/,
+      "เบอร์โทรศัพท์ไม่ถูกต้อง ต้องเป็นรูปแบบ +668xxxxxxxx"
+    ),
+
+  registerCode: z.literal("AMSEL", {
+    message: "รหัสลงทะเบียนไม่ถูกต้อง",
+  }),
 });
 
 // -------------------------------
-// GET: ดึงผู้ใช้ทั้งหมด 
+// GET: ดึงข้อมูลผู้ใช้ทั้งหมด (สำหรับ admin หรือ debug)
 // -------------------------------
 export async function GET() {
   try {
@@ -33,9 +61,10 @@ export async function GET() {
         email: true,
         createdAt: true,
       },
+      orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(users);
+    return NextResponse.json(users, { status: 200 });
   } catch (error) {
     console.error("Fetch users error:", error);
     return NextResponse.json(
@@ -46,45 +75,50 @@ export async function GET() {
 }
 
 // -------------------------------
-// POST: ลงทะเบียนผู้ใช้ใหม่ (lineUserId มาจาก middleware)
+// POST: ลงทะเบียนผู้ใช้ใหม่ผ่าน LINE Login
 // -------------------------------
 export async function POST(req: NextRequest) {
   try {
-    // 1. ดึง lineUserId จาก header (middleware set ให้แล้ว)
+    // 1. ดึง lineUserId ที่ middleware แนบมาให้แล้ว
     const lineUserId = req.headers.get("x-line-user-id");
-    
+
     if (!lineUserId) {
       return NextResponse.json(
-        { error: "ไม่พบ LINE User ID" },
+        { error: "ไม่พบข้อมูลผู้ใช้ LINE กรุณาเข้าสู่ระบบใหม่" },
         { status: 401 }
       );
     }
 
-    // 2. Validate body
+    // 2. รับและ validate body
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
 
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0].message;
-      return NextResponse.json({ error: firstError }, { status: 400 });
+      const firstError = parsed.error.issues[0];
+      return NextResponse.json(
+        { error: firstError.message },
+        { status: 400 }
+      );
     }
 
     const { firstName, lastName, company, phoneNumber, email } = parsed.data;
 
+    // 3. ตรวจสอบว่ามีผู้ใช้ซ้ำไหม (lineUserId, email, phoneNumber)
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [
-          { lineUserId },
-          { email },
-          { phoneNumber },
-        ],
+        OR: [{ lineUserId }, { email }, { phoneNumber }],
+      },
+      select: {
+        lineUserId: true,
+        email: true,
+        phoneNumber: true,
       },
     });
 
     if (existingUser) {
       if (existingUser.lineUserId === lineUserId) {
         return NextResponse.json(
-          { error: "บัญชี Line นี้ถูกใช้งานแล้ว" },
+          { error: "บัญชี LINE นี้ลงทะเบียนแล้ว" },
           { status: 409 }
         );
       }
@@ -102,16 +136,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. สร้างผู้ใช้ใหม่
+    // 4. สร้างผู้ใช้ใหม่
     const newUser = await prisma.user.create({
       data: {
         lineUserId,
         firstName,
         lastName,
-        company,
-        phoneNumber,
-        email, 
-        registerCode: "AMSEL", 
+        company: company || null,
+        phoneNumber, // เก็บแบบ +66... (E.164)
+        email,
+        registerCode: "AMSEL",
       },
       select: {
         id: true,
@@ -125,16 +159,31 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(newUser, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "ลงทะเบียนสำเร็จ",
+        user: newUser,
+      },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error("Register Error:", error);
 
+    // Prisma unique constraint violation
     if (error.code === "P2002") {
+      const field = error.meta?.target?.[0];
+      const messages: Record<string, string> = {
+        lineUserId: "บัญชี LINE นี้ถูกใช้งานแล้ว",
+        email: "อีเมลนี้ถูกใช้งานแล้ว",
+        phoneNumber: "เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว",
+      };
       return NextResponse.json(
-        { error: "ข้อมูลนี้มีอยู่ในระบบแล้ว" },
+        { error: messages[field] || "ข้อมูลนี้มีอยู่ในระบบแล้ว" },
         { status: 409 }
       );
     }
+
     return NextResponse.json(
       { error: "เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง" },
       { status: 500 }
