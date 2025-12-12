@@ -2,14 +2,14 @@
 'use client';
 
 import { Search, Download, Package, AlertTriangle, DollarSign } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { Suspense } from "react";
 
-export default function InventoryPage() {
+function InventoryContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   // Pagination
-  const currentPage = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const currentPage = 1; // Default to page 1 for now
   const itemsPerPage = 5;
   const totalItems = inventory.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -21,9 +21,7 @@ export default function InventoryPage() {
 
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages) return;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
-    router.push(`?${params.toString()}`);
+    router.push(`?page=${page}`);
   };
 
   return (
@@ -293,3 +291,10 @@ const inventory = [
   { sku: "LIONMANE", name: "Lion's Mane 1000mg", category: "Brain Health", warehouse: "Warehouse B (LA)", onHand: 0, allocated: 0, available: 0, reorder: 70, status: "Out of Stock" },
   { sku: "HYALURONIC", name: "Hyaluronic Acid 100mg", category: "Beauty", warehouse: "Main (NYC)", onHand: 612, allocated: 140, available: 472, reorder: 200, status: "In Stock" },
 ];
+export default function InventoryPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InventoryContent />
+    </Suspense>
+  );
+}

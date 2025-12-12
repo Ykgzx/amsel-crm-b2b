@@ -2,14 +2,14 @@
 'use client';
 
 import { Search, Download, Plus } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { Suspense } from "react";
 
-export default function CustomersPage() {
+function CustomersContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   // Pagination
-  const currentPage = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const currentPage = 1; // Default to page 1 for now
   const itemsPerPage = 5;
   const totalItems = customers.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -21,9 +21,7 @@ export default function CustomersPage() {
 
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages) return;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
-    router.push(`?${params.toString()}`);
+    router.push(`?page=${page}`);
   };
 
   return (
@@ -240,3 +238,11 @@ const customers = [
   { id: "C-0024", name: "CarePlus Shop", email: "care@plus.com", phone: "+66 86 456 7890", type: "Pharmacy", region: "South", orders: 98, ltv: "78,900", status: "Inactive" },
   { id: "C-0025", name: "Future Health Co.", email: "future@health.co", phone: "+66 97 567 8901", type: "Distributor", region: "Central", orders: 812, ltv: "987,600", status: "Active" },
 ];
+
+export default function CustomersPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CustomersContent />
+    </Suspense>
+  );
+}

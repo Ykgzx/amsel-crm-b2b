@@ -19,8 +19,7 @@ model User {
   lastName           String
   shopName           String?
   phoneNumber        String   @unique
-  email              String?  @unique
-  password           String 
+  email              String   @unique
   role               String   @default("USER")   // USER, ADMIN, SUPER_ADMIN
   points             Int      @default(0)
   tier               String   @default("BRONZE") // BRONZE, SILVER, GOLD, PLATINUM
@@ -30,7 +29,7 @@ model User {
   totalSpending      Decimal? @db.Decimal(12, 2)
   nextTier           String?  // BRONZE, SILVER, GOLD, PLATINUM
   toNextTier         Decimal? @db.Decimal(12, 2)
-  CustId             Int?     @unique
+  CustId             Int?    
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 

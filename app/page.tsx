@@ -154,7 +154,6 @@ export default function Home() {
                 ) : (
                   <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                 )}
-
                 <span className="relative">
                   {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
                 </span>
