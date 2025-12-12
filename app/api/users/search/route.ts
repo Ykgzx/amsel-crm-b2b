@@ -16,14 +16,15 @@ export async function GET(request: Request) {
     const whereClause: any = {};
 
     if (query) {
-      // เพิ่ม company เข้าไปใน search
+      // ค้นหาจาก firstName, lastName, email, phone, registerCode, lineUserId, company
       whereClause.OR = [
-        { fullName: { contains: query } },
+        { firstName: { contains: query } },
+        { lastName: { contains: query } },
         { email: { contains: query } },
         { phoneNumber: { contains: query } },
         { registerCode: { contains: query } },
         { lineUserId: { contains: query } },
-        { company: { contains: query } }, // ← เพิ่มตรงนี้
+        { company: { contains: query } },
       ];
     }
 
@@ -36,7 +37,8 @@ export async function GET(request: Request) {
       select: {
         id: true,
         lineUserId: true,
-        fullName: true,
+        firstName: true,
+        lastName: true,
         company: true,
         phoneNumber: true,
         email: true,
@@ -63,8 +65,19 @@ export async function GET(request: Request) {
 
     const total = await prisma.user.count({ where: whereClause });
 
+    // รวม firstName + lastName เป็น fullName
     const formatted = users.map((user) => ({
-      ...user,
+      id: user.id,
+      lineUserId: user.lineUserId,
+      fullName: `${user.firstName} ${user.lastName}`.trim(),
+      company: user.company,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      tier: user.tier,
+      registerCode: user.registerCode,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      status: user.status,
       roles: user.roles.map((userRole) => userRole.role),
     }));
 

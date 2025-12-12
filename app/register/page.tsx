@@ -1,9 +1,9 @@
-// app/register/page.tsx
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, KeyRound, ShieldAlert, Mail } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -12,15 +12,18 @@ export default function RegisterPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     if (password !== confirmPassword) {
-      setError('รหัสผ่านไม่ตรงกัน');
+      Swal.fire({
+        icon: 'error',
+        title: 'รหัสผ่านไม่ตรงกัน',
+        text: 'กรุณาตรวจสอบรหัสผ่านอีกครั้ง',
+        confirmButtonText: 'ตกลง',
+      });
       return;
     }
 
@@ -36,14 +39,26 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Registration failed');
+        throw new Error(data.message || 'การลงทะเบียนล้มเหลว');
       }
 
-      // หลัง register สำเร็จ → redirect ไป login
-      alert('ลงทะเบียนสำเร็จ! กรุณาเข้าสู่ระบบ');
-
+      // สำเร็จ → แสดง SweetAlert แล้ว redirect
+      Swal.fire({
+        icon: 'success',
+        title: 'สร้างบัญชีสำเร็จ!',
+        text: 'กำลังนำคุณไปยังแดชบอร์ด...',
+        showConfirmButton: false,
+        timer: 1500,
+      }).then(() => {
+        router.push('/dashboard');
+      });
     } catch (err: any) {
-      setError(err.message || 'เกิดข้อผิดพลาด');
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: err.message || 'ไม่สามารถลงทะเบียนได้ในขณะนี้',
+        confirmButtonText: 'ตกลง',
+      });
     } finally {
       setLoading(false);
     }
@@ -156,12 +171,6 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
-
-            {error && (
-              <div className="text-red-600 bg-red-50 p-3 rounded-lg text-sm border border-red-200">
-                {error}
-              </div>
-            )}
 
             <button
               type="submit"
